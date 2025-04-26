@@ -6,103 +6,8 @@ package ripestat
 * https://www.apache.org/licenses/LICENSE-2.0
  */
 
-import (
-	"encoding/json"
-	"strconv"
-	"strings"
-	"time"
-)
-
 // ASN is a custom type that can handle both string and integer ASN values
 type ASN int
-
-// UnmarshalJSON implements custom unmarshaling for ASN values from RIPE Stat API
-// RIPE API may return ASNs as strings or integers
-func (a *ASN) UnmarshalJSON(data []byte) error {
-	// Try to unmarshal as an integer first
-	var intValue int
-	if err := json.Unmarshal(data, &intValue); err == nil {
-		*a = ASN(intValue)
-		return nil
-	}
-
-	// If that fails, try to unmarshal as a string
-	var stringValue string
-	if err := json.Unmarshal(data, &stringValue); err != nil {
-		return err
-	}
-
-	// Remove any "AS" prefix if present
-	stringValue = strings.TrimPrefix(stringValue, "AS")
-	stringValue = strings.TrimSpace(stringValue)
-
-	// Convert the string to an integer
-	intValue, err := strconv.Atoi(stringValue)
-	if err != nil {
-		return err
-	}
-
-	*a = ASN(intValue)
-	return nil
-}
-
-// Int returns the int value of the ASN
-func (a ASN) Int() int {
-	return int(a)
-}
-
-// MarshalJSON implements custom marshaling for ASN
-func (a ASN) MarshalJSON() ([]byte, error) {
-	return json.Marshal(int(a))
-}
-
-// RipeTime is a custom time type that handles the RIPE API time format
-type RipeTime time.Time
-
-// UnmarshalJSON implements custom unmarshaling for time values from RIPE Stat API
-// RIPE API may return times in various formats, with or without timezone information
-func (rt *RipeTime) UnmarshalJSON(data []byte) error {
-	// Remove the quotes from the JSON string
-	s := strings.Trim(string(data), "\"")
-	if s == "" || s == "null" {
-		*rt = RipeTime(time.Time{})
-		return nil
-	}
-
-	// Try to parse with timezone first
-	t, err := time.Parse(time.RFC3339, s)
-	if err == nil {
-		*rt = RipeTime(t)
-		return nil
-	}
-
-	// Try to parse without timezone - using multiple formats
-	formats := []string{
-		"2006-01-02T15:04:05",
-		"2006-01-02T15:04:05.999999",
-	}
-
-	for _, format := range formats {
-		t, err := time.Parse(format, s)
-		if err == nil {
-			*rt = RipeTime(t)
-			return nil
-		}
-	}
-
-	// Return original error if none of the formats match
-	return err
-}
-
-// Time returns the time.Time value
-func (rt RipeTime) Time() time.Time {
-	return time.Time(rt)
-}
-
-// MarshalJSON implements custom marshaling for RipeTime
-func (rt RipeTime) MarshalJSON() ([]byte, error) {
-	return json.Marshal(time.Time(rt).Format(time.RFC3339))
-}
 
 // Response represents the standard response format from the RIPE Stat API
 type Response struct {
@@ -123,11 +28,6 @@ type Response struct {
 	DataCall     string   `json:"data_call"`
 	// Cached is a boolean that indicates if the data was cached
 	Cached bool `json:"cached"`
-}
-
-// IsCached returns whether the response was served from cache
-func (r Response) IsCached() bool {
-	return r.Cached
 }
 
 // AbuseContactResponse represents the response from abuse-contact-finder endpoint
