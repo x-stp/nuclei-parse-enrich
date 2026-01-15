@@ -6,7 +6,7 @@ require (
 	github.com/ipinfo/go/v2 v2.10.0
 	github.com/jessevdk/go-flags v1.6.1
 	github.com/likexian/whois v1.15.6
-	github.com/sirupsen/logrus v1.9.3
+	github.com/sirupsen/logrus v1.9.4
 	golang.org/x/time v0.12.0
 )
 
